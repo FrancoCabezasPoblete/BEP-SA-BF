@@ -132,8 +132,42 @@ Instance initInstance(string file){
     return instancia;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main(int argc, char **argv){
-    Instance instancia = initInstance(argv[1]);
+    Instance instance = initInstance(argv[1]);
+
+    /* *
+     * 
+     * 3.1 Sync
+     *
+     * if(currT.size() > 1){ // Retorno
+     *	for(int i = 0; i < instance.P ;i++){
+     *	 if(instance.EP[i][solution[TByTask[0]][currT.size()-1].second] > 0)
+     *	  currPos = i; 
+     *	 break;
+     *	}
+     *	for(int i = nearest+1; i < instance.P ;i++){
+     *	 if(instance.dist_P_R[i][currPos] < instance.dist_P_R[nearest][currPos])
+     *	  currPos = i;	 
+     *	}
+     * }
+     *
+     * */
+
 
     return 0;
 }
