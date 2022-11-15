@@ -4,7 +4,7 @@
 #include <vector>
 using namespace std;
 
-struct Instancia{
+struct Instance{
     int B, E, P, R;
     
     int capacidadBuses; 
@@ -20,11 +20,11 @@ struct Instancia{
     vector<vector<int>> dist_PtoEncuentro_Refugio;
 };
 
-int main(int argc, char **argv){
+Instance initInstance(string file){
     string instanceLine, instanceParsed;
     stringstream instanceParsedStream;
-    ifstream instanceFile(argv[1]);
-    Instancia instancia;
+    ifstream instanceFile(file);
+    Instance instancia;
     int delimeterPos;
 
     // Inicializar instancia
@@ -98,7 +98,7 @@ int main(int argc, char **argv){
     }
     instanceFile.close();
 
-    
+    /*
     cout << "B: " << instancia.B << " E: " << instancia.E << " P: " << instancia.P << " R: " << instancia.R << endl; 
     cout << "CapacidadBuses: " << instancia.capacidadBuses << " PersonasTotalPE: " << instancia.personasTotalPE << " CapacidadTotalR: " << instancia.capacidadTotalR << endl; 
     cout << "BusesEstacion: ";
@@ -127,6 +127,13 @@ int main(int argc, char **argv){
             cout << instancia.dist_PtoEncuentro_Refugio[i][j] << " ";
         cout << endl;
     }
+    */
+
+    return instancia;
+}
+
+int main(int argc, char **argv){
+    Instance instancia = initInstance(argv[1]);
 
     return 0;
 }
