@@ -20,8 +20,6 @@ struct Instance{
     vector<vector<int>> dist_PtoEncuentro_Refugio;
 };
 
-
-
 Instance initInstance(string file){
     string instanceLine, instanceParsed;
     stringstream instanceParsedStream;
@@ -171,8 +169,6 @@ int main(int argc, char **argv){
     } else { // Viaje incial (Estación -> PtoEncuentro) más cercano
 
     }
-
-
 
     return 0;
 }
