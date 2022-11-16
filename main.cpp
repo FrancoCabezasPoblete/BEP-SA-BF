@@ -97,7 +97,7 @@ Instance initInstance(string file){
     }
     instanceFile.close();
 
-    /* Print
+    /* Print 
     cout << "B: " << instance.B << " E: " << instance.E << " P: " << instance.P << " R: " << instance.R << endl; 
     cout << "CapacidadBuses: " << instance.capacidadBuses << " PersonasTotalPE: " << instance.personasTotalPE << " CapacidadTotalR: " << instance.capacidadTotalR << endl; 
     cout << "BusesEstacion: ";
@@ -131,8 +131,25 @@ Instance initInstance(string file){
     return instance;
 }
 
+int routeDist(vector<pair<int,int>> currBus, Instance instance){
+    // Viaje incial (Estación -> PtoEncuentro)
+    int sumDist = instance.dist_estacion_PtoEncuentro[currBus[0].first][currBus[0].second];
+    // Segundo Viaje (PtoEncuentro -> Refugio)
+    sumDist += instance.dist_PtoEncuentro_Refugio[currBus[1].first][currBus[1].second];
+    
+    for(int i = 2; i < int(currBus.size()); i++){
+        // i Viaje de retorno (Refugio -> PtoEncuentro)
+        sumDist += instance.dist_PtoEncuentro_Refugio[currBus[i].first][currBus[i-1].second];
+        // i Viaje (PtoEncuentro -> Refugio)
+        sumDist += instance.dist_PtoEncuentro_Refugio[currBus[i].first][currBus[i].second];
+    }
+
+    return sumDist;
+}
+
 int main(int argc, char **argv){
-    Instance instance = initInstance(argv[1]);
+    //Instance instance = initInstance(argv[1]);
+    Instance instance = initInstance("instancias/InstanceBEP-1-4-2-4.txt");
 
     // Lista de buses con lista de viajes(origen,destino)
     vector<vector<pair<int,int>>> solution;
@@ -147,27 +164,83 @@ int main(int argc, char **argv){
     }
 
     // Solucion Inicial Factible
-    currBus = solution[busByTrips[0]];
-    if(currBus.size() != 0){ // Viaje (PtoEncuentro -> Refugio) más cercano
-        if(currBus.size() > 2){ // Viaje de retorno (Refugio -> Refugio) más cercano
-
-        }
-
-        currPos = currBus[currBus.size()-1].second;
-
-        for(int r = 0; r < instance.R; r++){
-            if(instance.capacidadRefugio[r] >= instance.capacidadBuses)
+    while(instance.personasTotalPE > 0){
+        currBus = solution[busByTrips[0]];
+        if(currBus.size() != 0){ // Viaje (PtoEncuentro -> Refugio) más cercano
+            currPos = currBus[currBus.size()-1].second;
+            
+            if(currBus.size() > 2){ // Viaje de retorno (Refugio -> Refugio) más cercano
+                for(int pe = 0; pe < instance.P; pe++){
+                    if(instance.personasPE[pe] > 0){
+                        nearestTrip = pe;
+                        break;
+                    }
+                }
+                for(int pe = nearestTrip+1; pe < instance.P; pe++)
+                    if(instance.dist_PtoEncuentro_Refugio[pe][currPos] < instance.dist_PtoEncuentro_Refugio[nearestTrip][currPos])
+                        nearestTrip = pe;
+                
+                instance.personasPE[nearestTrip] -= instance.capacidadBuses;
+                instance.personasTotalPE -= instance.capacidadBuses;
+                currPos = nearestTrip;
+            }
+            
+            for(int r = 0; r < instance.R; r++){
+                if(instance.capacidadRefugio[r] >= instance.capacidadBuses){
                     nearestTrip = r;
-            break;
+                    break;
+                }
+            }
+            for(int r = nearestTrip+1; r < instance.R; r++)
+                if(instance.dist_PtoEncuentro_Refugio[currPos][r] < instance.dist_PtoEncuentro_Refugio[currPos][nearestTrip])
+                    nearestTrip = r;
+
+            instance.capacidadRefugio[nearestTrip] -= instance.capacidadBuses;
+            instance.capacidadTotalR -= instance.capacidadBuses;
+            currBus.push_back(make_pair(currPos,nearestTrip));
+            cout << currBus.size() << endl;
+
+        } else { // Viaje incial (Estación -> PtoEncuentro) más cercano
+            currPos = 0; // TODO: Definir estaciones para los buses
+
+            for(int pe = 0; pe < instance.P; pe++){
+                if(instance.personasPE[pe] > 0){
+                    nearestTrip = pe;
+                    break;
+                }
+            }
+            for(int pe = nearestTrip+1; pe < instance.P; pe++)
+                if(instance.dist_estacion_PtoEncuentro[currPos][pe] < instance.dist_estacion_PtoEncuentro[currPos][nearestTrip])
+                    nearestTrip = pe;
+            
+            instance.personasPE[nearestTrip] -= instance.capacidadBuses;
+            instance.personasTotalPE -= instance.capacidadBuses;
+            currBus.push_back(make_pair(currPos,nearestTrip));
         }
-        for(int r = nearestTrip+1; r < instance.R; r++)
-            if(instance.dist_PtoEncuentro_Refugio[currPos][r] < instance.dist_PtoEncuentro_Refugio[currPos][nearestTrip])
-                nearestTrip = r;
+        solution[busByTrips[0]] = currBus;
+        // Actualizar orden de buses
+        for(int b = instance.B-1; b > 0; b--){
+            if(currBus.size() > solution[busByTrips[b]].size()){
+                busByTrips.insert(busByTrips.begin()+b+1,busByTrips[0]);
+                busByTrips.erase(busByTrips.begin());
+                break;
+            } else if(currBus.size() == solution[busByTrips[b]].size()){
+                if(routeDist(currBus, instance) > routeDist(solution[busByTrips[b]], instance)) 
+                    busByTrips.insert(busByTrips.begin()+b+1,busByTrips[0]);
+                else
+                    busByTrips.insert(busByTrips.begin()+b,busByTrips[0]);
+                busByTrips.erase(busByTrips.begin());
+                break;
+            }
+        }
+    }
 
-        instance.capacidadRefugio[nearestTrip] -= instance.capacidadBuses;
-        currBus.push_back(make_pair(currPos,nearestTrip));
-    } else { // Viaje incial (Estación -> PtoEncuentro) más cercano
-
+    cout << "Solución:\n";
+    for(int i = 0; i < instance.B; i++){
+        cout << "Bus[" << i+1 << "]: ";
+        for(int j = 0; j < int(solution[i].size()); j++)
+            cout << "(" << solution[i][j].first << ", " << solution[i][j].second << ")->";
+        cout << endl;
     }
 
     return 0;
