@@ -81,7 +81,7 @@ Instance initInstance(string file){
     }
     instanceFile.close();
 
-    /* Print */
+    /* Print
     cout << "B: " << instance.B << " E: " << instance.E << " P: " << instance.P << " R: " << instance.R << endl; 
     cout << "CapacidadBuses: " << instance.capacidadBuses << " PersonasTotalPE: " << instance.personasTotalPE << " CapacidadTotalR: " << instance.capacidadTotalR << endl; 
     cout << "BusesEstacion: ";
@@ -118,7 +118,7 @@ Instance initInstance(string file){
             cout << instance.dist_PtoEncuentro_Refugio[i][j] << "\t";
         cout << endl;
     }
-    /**/
+    */
 
     return instance;
 }
