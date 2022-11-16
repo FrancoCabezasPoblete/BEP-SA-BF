@@ -1,32 +1,7 @@
-#include <iostream>
-#include <vector>
+#include "functions.h"
 #include <fstream>
 #include <sstream>
 using namespace std;
-
-struct Instance{
-    int B, E, P, R;
-
-    int capacidadBuses; 
-    // vector de tamaño B con la posición inicial de cada bus
-    vector<int> busesEstacion;
-
-    int personasTotalPE;
-    vector<int> personasPE;
-
-    int capacidadTotalR;
-    vector<int> capacidadRefugio;
-
-    vector<vector<int>> dist_estacion_PtoEncuentro;
-    vector<vector<int>> dist_PtoEncuentro_Refugio;
-};
-
-struct Solution{
-    // Lista de buses con lista de viajes(origen,destino)
-    vector<vector<pair<int,int>>> sol;
-    // Lista de buses ordenada crecientemente respecto a la cantidad de viajes y su distancia total
-    vector<int> busByTrips;
-};
 
 Instance initInstance(string file){
     string instanceLine, instanceParsed;
@@ -106,7 +81,7 @@ Instance initInstance(string file){
     }
     instanceFile.close();
 
-    /* Print
+    /* Print */
     cout << "B: " << instance.B << " E: " << instance.E << " P: " << instance.P << " R: " << instance.R << endl; 
     cout << "CapacidadBuses: " << instance.capacidadBuses << " PersonasTotalPE: " << instance.personasTotalPE << " CapacidadTotalR: " << instance.capacidadTotalR << endl; 
     cout << "BusesEstacion: ";
@@ -133,7 +108,6 @@ Instance initInstance(string file){
         cout << endl;
     }
     cout << "Distancias Puntos de encuentro a Refugio: " << endl;
-    cout << "Distancias Estación a Puntos de encuentro: " << endl;
     cout << "Refugio:\t\t";
     for(int i = 0; i < instance.R; i++)
             cout << "[" << i+1 << "]\t";
@@ -144,7 +118,7 @@ Instance initInstance(string file){
             cout << instance.dist_PtoEncuentro_Refugio[i][j] << "\t";
         cout << endl;
     }
-    */
+    /**/
 
     return instance;
 }
@@ -254,8 +228,12 @@ Solution initFeasibleSolution(Instance instance){
     cout << "Solución:\n";
     for(int i = 0; i < instance.B; i++){
         cout << "Bus[" << i+1 << "]: ";
-        for(int j = 0; j < int(solution.sol[i].size()); j++)
-            cout << "(" << solution.sol[i][j].first+1 << ", " << solution.sol[i][j].second+1 << ")->";
+        for(int j = 0; j < int(solution.sol[i].size()); j++){
+            cout << "(" << solution.sol[i][j].first+1 << ", " << solution.sol[i][j].second+1 << ")";
+            if(j+1 < int(solution.sol[i].size())){
+                cout << "->";
+            }
+        }
         cout << endl;
     }
     cout << "Bus con mayor ruta: " << solution.busByTrips[instance.B-1]+1 << endl;
@@ -265,15 +243,4 @@ Solution initFeasibleSolution(Instance instance){
     */
 
     return solution;
-}
-
-int main(int argc, char **argv){
-    Instance instance = initInstance(argv[1]);
-
-    // Solucion Inicial Factible
-    Solution solution = initFeasibleSolution(instance);
-    
-    // SA+AM #TODO
-
-    return 0;
 }
