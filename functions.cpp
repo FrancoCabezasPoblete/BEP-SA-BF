@@ -81,7 +81,7 @@ Instance initInstance(string file){
     }
     instanceFile.close();
 
-    /* Print
+    /* Print instanciación
     cout << "B: " << instance.B << " E: " << instance.E << " P: " << instance.P << " R: " << instance.R << endl; 
     cout << "CapacidadBuses: " << instance.capacidadBuses << " PersonasTotalPE: " << instance.personasTotalPE << " CapacidadTotalR: " << instance.capacidadTotalR << endl; 
     cout << "BusesEstacion: ";
@@ -224,7 +224,7 @@ Solution initFeasibleSolution(Instance instance){
         }
     }
 
-    /* Print 
+    /* Print solución inicial
     cout << "Solución:\n";
     for(int i = 0; i < instance.B; i++){
         cout << "Bus[" << i+1 << "]: ";
