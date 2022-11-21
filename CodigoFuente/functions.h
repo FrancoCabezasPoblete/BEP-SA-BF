@@ -17,6 +17,7 @@ struct Instance{
 
     int capacidadTotalR;
     vector<int> capacidadRefugio;
+    vector<int> personasRefugio;
 
     vector<vector<int>> dist_estacion_PtoEncuentro;
     vector<vector<int>> dist_PtoEncuentro_Refugio;
@@ -25,8 +26,10 @@ struct Instance{
 struct Solution{
     // Lista de buses con lista de viajes(origen,destino)
     vector<vector<pair<int,int>>> sol;
-    // Lista de buses ordenada crecientemente respecto a la cantidad de viajes y su distancia total
+    // Lista de buses ordenada crecientemente respecto a la tiempo de evacuacion total y cantidad de viajes 
     vector<int> busByTrips;
+    // Lista de buses, donde el i-esimo elemento contiene el tiempo de evacuacion total del bus i.
+    vector<int> busDist;
 };
 
 Instance initInstance(string file);

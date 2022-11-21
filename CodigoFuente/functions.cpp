@@ -52,8 +52,10 @@ Instance initInstance(string file){
     instance.capacidadTotalR = stoi(instanceLine.substr(0 , delimeterPos));
     
     instanceParsedStream.str(instanceLine.substr(delimeterPos + 2));
-    while(getline(instanceParsedStream, instanceParsed, ' '))
+    while(getline(instanceParsedStream, instanceParsed, ' ')){
         instance.capacidadRefugio.push_back(stoi(instanceParsed));
+        instance.personasRefugio.push_back(0);
+    }
     instanceParsedStream.clear();
 
     getline(instanceFile, instanceLine);
@@ -80,45 +82,6 @@ Instance initInstance(string file){
         instanceParsedStream.clear();
     }
     instanceFile.close();
-
-    /* Print instanciación
-    cout << "B: " << instance.B << " E: " << instance.E << " P: " << instance.P << " R: " << instance.R << endl; 
-    cout << "CapacidadBuses: " << instance.capacidadBuses << " PersonasTotalPE: " << instance.personasTotalPE << " CapacidadTotalR: " << instance.capacidadTotalR << endl; 
-    cout << "BusesEstacion: ";
-    for(int i = 0; i<instance.E; i++)
-        cout << instance.busesEstacion[i] << "[" << i+1 << "] ";
-    cout << endl;
-    cout << "PersonasPE: ";
-    for(int i = 0; i<instance.P; i++)
-        cout << instance.personasPE[i] << "[" << i+1 << "] ";
-    cout << endl;
-    cout << "CapacidadRefugio: ";
-    for(int i = 0; i<instance.R; i++)
-        cout << instance.capacidadRefugio[i] << "[" << i+1 << "] ";
-    cout << endl;
-    cout << "Distancias Estación a Puntos de encuentro: " << endl;
-    cout << "PtoEncuentro:\t";
-    for(int i = 0; i < instance.P; i++)
-            cout << "[" << i+1 << "]\t";
-    cout << endl;
-    for(int i = 0; i < instance.E; i++){
-        cout << "Estación[" << i+1 << "]:\t";
-        for(int j = 0; j < instance.P; j++)
-            cout << instance.dist_estacion_PtoEncuentro[i][j] << "\t";
-        cout << endl;
-    }
-    cout << "Distancias Puntos de encuentro a Refugio: " << endl;
-    cout << "Refugio:\t\t";
-    for(int i = 0; i < instance.R; i++)
-            cout << "[" << i+1 << "]\t";
-    cout << endl;
-    for(int i = 0; i < instance.P; i++){
-        cout << "PtoEncuentro[" << i+1 << "]:\t";
-        for(int j = 0; j < instance.R; j++)
-            cout << instance.dist_PtoEncuentro_Refugio[i][j] << "\t";
-        cout << endl;
-    }
-    */
 
     return instance;
 }
@@ -151,6 +114,7 @@ Solution initFeasibleSolution(Instance instance){
     for(int i = 0; i < instance.B; i++){
         solution.sol.push_back(vector<pair<int,int>> {});
         solution.busByTrips.push_back(i);
+        solution.busDist.push_back(0);
     }
 
     while(instance.personasTotalPE > 0){
@@ -185,6 +149,7 @@ Solution initFeasibleSolution(Instance instance){
                     nearestTrip = r;
 
             instance.capacidadRefugio[nearestTrip] -= instance.capacidadBuses;
+            instance.personasRefugio[nearestTrip] += instance.capacidadBuses;
             instance.capacidadTotalR -= instance.capacidadBuses;
             currBus.push_back(make_pair(currPos,nearestTrip));
         } else { // Viaje incial (Estación -> PtoEncuentro) más cercano
@@ -205,15 +170,14 @@ Solution initFeasibleSolution(Instance instance){
             currBus.push_back(make_pair(currPos,nearestTrip));
         }
         solution.sol[solution.busByTrips[0]] = currBus;
+        solution.busDist[solution.busByTrips[0]] = routeDist(currBus, instance);
         // Actualizar orden de buses
-        for(int b = instance.B-1, distCurrBus, distBusB; b > 0; b--){
-            distCurrBus = routeDist(currBus, instance);
-            distBusB = routeDist(solution.sol[solution.busByTrips[b]], instance);
-            if(distCurrBus > distBusB){
+        for(int b = instance.B-1; b > 0; b--){
+            if(solution.busDist[solution.busByTrips[0]] > solution.busDist[solution.busByTrips[b]]){
                 solution.busByTrips.insert(solution.busByTrips.begin()+b+1, solution.busByTrips[0]);
                 solution.busByTrips.erase(solution.busByTrips.begin());
                 break;
-            } else if(distCurrBus == distBusB){
+            } else if(solution.busDist[solution.busByTrips[0]] == solution.busDist[solution.busByTrips[b]]){
                 if(currBus.size() > solution.sol[solution.busByTrips[b]].size()) 
                     solution.busByTrips.insert(solution.busByTrips.begin()+b+1, solution.busByTrips[0]);
                 else
@@ -224,23 +188,47 @@ Solution initFeasibleSolution(Instance instance){
         }
     }
 
-    /* Print solución inicial
-    cout << "Solución:\n";
-    for(int i = 0; i < instance.B; i++){
-        cout << "Bus[" << i+1 << "]: ";
-        for(int j = 0; j < int(solution.sol[i].size()); j++){
-            cout << "(" << solution.sol[i][j].first+1 << ", " << solution.sol[i][j].second+1 << ")";
-            if(j+1 < int(solution.sol[i].size())){
-                cout << "->";
-            }
-        }
-        cout << endl;
-    }
-    cout << "Bus con mayor ruta: " << solution.busByTrips[instance.B-1]+1 << endl;
-    cout << "Mayor ruta: " << routeDist(solution.sol[solution.busByTrips[instance.B-1]], instance) << endl;
+
+
+    /* Print solución inicial */
+    ofstream solFile("solucionInicial.txt");
+    
+    cout << "Solución Inicial:\n";
+    solFile << "Solución Inicial:\n";
+    
+    cout << "Duración total de la evacuación: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl;
+    solFile << "Duración total de la evacuación: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl;
+    
+    solFile << endl << "Trip nr.|\t";
+    // Encontrar la máxima cantidad de viajes
+    int maxTrips = 0;
     for(int i = 0; i < instance.B; i++)
-        cout << "Distancia ruta bus[" << i+1 <<"]: " << routeDist(solution.sol[i], instance) << endl;
-    */
+        if(maxTrips < int(solution.sol[i].size()))
+            maxTrips = int(solution.sol[i].size());
+
+    for(int i = 0; i < maxTrips; i++)
+        solFile << i+1 << "\t\t";
+    solFile << "| Evac. Time" << endl;
+    for(int i = 0; i < instance.B; i++){
+        solFile << "Bus " << i+1 << "\t|\t";
+        for(int j = 0; j < maxTrips; j++){
+            if(j < int(solution.sol[i].size()))
+                solFile << "(" << solution.sol[i][j].first+1 << "," << solution.sol[i][j].second+1 << ")\t";
+            else
+                solFile << "-\t\t";
+        }
+        solFile << "| " << solution.busDist[i];
+        if(solution.busDist[i] == solution.busDist[solution.busByTrips[instance.B-1]])
+            solFile << "*\n";
+        else 
+            solFile << endl;
+    }
+    solFile << endl << "Cantidad de personas en: " << endl;
+    for(int i = 0; i < instance.R; i++)
+        solFile << "Refugio " << i+1 << ": " << instance.personasRefugio[i] << endl;
+    
+    solFile.close();
+    /**/
 
     return solution;
 }
