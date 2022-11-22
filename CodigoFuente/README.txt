@@ -7,14 +7,14 @@ $> make
 
 - Ejecutar programa:
 ```
-$> ./Ent2 <instancia>
+$> ./Entrega2 <instancia>
 ```
 
 El parametro <instancia> es la ruta del archivo .txt que contiene la instancia del problema a evaluar.
 
 Ejemplo:
 ```
-$> ./Ent2 instancia/InstanceBEP-1-4-2-4.txt
+$> ./Entrega2 instancia/InstanceBEP-1-4-2-4.txt
 ```
 
 - Limpiar archivos de compilado y ejecutable:

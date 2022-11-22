@@ -1,11 +1,11 @@
-Ent2: Ent2.o functions.o functions.h
-	g++ -Wall -g Ent2.o functions.o -o Ent2
+Entrega2: Entrega2.o functions.o functions.h
+	g++ -Wall -g Entrega2.o functions.o -o Entrega2
 
-Ent2.o: Ent2.cpp
-	g++ -Wall -c Ent2.cpp
+Entrega2.o: Entrega2.cpp
+	g++ -Wall -c Entrega2.cpp
 
 functions.o: functions.cpp functions.h
 	g++ -Wall -c functions.cpp
 
 clean:
-	rm *.o Ent2 solucionInicial.txt
+	rm *.o Entrega2 solucionInicial.txt
