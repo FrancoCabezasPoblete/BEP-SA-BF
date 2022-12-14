@@ -11,7 +11,7 @@ $> ./main <instancia> <q> <tmax> <qt> <qm>
 ```
 
 - Parametros:
-  - El parametro <instancia> es la ruta del archivo .txt que contiene la instancia del problema a evaluar.
+  - El parametro \<instancia\> es la ruta del archivo .txt que contiene la instancia del problema a evaluar.
   - \<q\> : temperatura inicial del S.A.
   - \<tmax\> : máximo de iteraciones.
   - \<qt\> : Velocidad de cambio de la temperatura.
