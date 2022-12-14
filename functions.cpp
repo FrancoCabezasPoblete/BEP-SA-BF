@@ -3,6 +3,49 @@
 #include <sstream>
 using namespace std;
 
+void printSolution(Instance instance, Solution solution, int executionTime){
+    fstream solFile;
+    solFile.open("solucion.txt", ios_base::app | ios_base::in);
+    
+    cout << "Solución Final:\n";
+    solFile << "Solución Final:\n";
+    
+    cout << "Duración total de la evacuación: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl;
+    solFile << "Duración total de la evacuación: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl;
+    
+    solFile << endl << "Trip nr.|\t";
+    // Encontrar la máxima cantidad de viajes
+    int maxTrips = 0;
+    for(int i = 0; i < instance.B; i++)
+        if(maxTrips < int(solution.sol[i].size()))
+            maxTrips = int(solution.sol[i].size());
+
+    for(int i = 0; i < maxTrips; i++)
+        solFile << i+1 << "\t\t";
+    solFile << "| Evac. Time" << endl;
+    for(int i = 0; i < instance.B; i++){
+        solFile << "Bus " << i+1 << "\t|\t";
+        for(int j = 0; j < maxTrips; j++){
+            if(j < int(solution.sol[i].size()))
+                solFile << "(" << solution.sol[i][j].first+1 << "," << solution.sol[i][j].second+1 << ")\t";
+            else
+                solFile << "-\t\t";
+        }
+        solFile << "| " << solution.busDist[i];
+        if(solution.busDist[i] == solution.busDist[solution.busByTrips[instance.B-1]])
+            solFile << "*\n";
+        else 
+            solFile << endl;
+    }
+    solFile << endl << "Cantidad de personas en: " << endl;
+    for(int i = 0; i < instance.R; i++)
+        solFile << "Refugio " << i+1 << ": " << instance.personasRefugio[i] << endl;
+    cout << endl << "Tiempo de ejecución total: " << executionTime << "[us]\n";
+    solFile << endl << "Tiempo de ejecución total: " << executionTime << "[us]\n";
+    
+    solFile.close();
+}
+
 Instance initInstance(string file){
     string instanceLine, instanceParsed;
     stringstream instanceParsedStream;
@@ -106,7 +149,7 @@ int routeDist(vector<pair<int,int>> currBus, Instance instance){
     return sumDist;
 }
 
-Solution initFeasibleSolution(Instance instance){
+pair<Solution,Instance> initFeasibleSolution(Instance instance){
     Solution solution;
     int nearestTrip;
     int currPos;
@@ -188,47 +231,138 @@ Solution initFeasibleSolution(Instance instance){
         }
     }
 
-
-
-    /* Print solución inicial */
-    ofstream solFile("solucionInicial.txt");
-    
-    cout << "Solución Inicial:\n";
-    solFile << "Solución Inicial:\n";
-    
-    cout << "Duración total de la evacuación: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl;
-    solFile << "Duración total de la evacuación: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl;
-    
-    solFile << endl << "Trip nr.|\t";
-    // Encontrar la máxima cantidad de viajes
-    int maxTrips = 0;
-    for(int i = 0; i < instance.B; i++)
-        if(maxTrips < int(solution.sol[i].size()))
-            maxTrips = int(solution.sol[i].size());
-
-    for(int i = 0; i < maxTrips; i++)
-        solFile << i+1 << "\t\t";
-    solFile << "| Evac. Time" << endl;
-    for(int i = 0; i < instance.B; i++){
-        solFile << "Bus " << i+1 << "\t|\t";
-        for(int j = 0; j < maxTrips; j++){
-            if(j < int(solution.sol[i].size()))
-                solFile << "(" << solution.sol[i][j].first+1 << "," << solution.sol[i][j].second+1 << ")\t";
-            else
-                solFile << "-\t\t";
-        }
-        solFile << "| " << solution.busDist[i];
-        if(solution.busDist[i] == solution.busDist[solution.busByTrips[instance.B-1]])
-            solFile << "*\n";
-        else 
-            solFile << endl;
-    }
-    solFile << endl << "Cantidad de personas en: " << endl;
-    for(int i = 0; i < instance.R; i++)
-        solFile << "Refugio " << i+1 << ": " << instance.personasRefugio[i] << endl;
-    
+    ofstream solFile("solucion.txt");
+    cout << "Duración total de la evacuación inicial: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl << endl;
+    solFile << "Duración total de la evacuación inicial: " << solution.busDist[solution.busByTrips[instance.B-1]] << endl << endl;
     solFile.close();
-    /**/
 
-    return solution;
+    return make_pair(solution,instance);
+}
+
+Solution randomSwap(Solution solution, Instance instance, int bus1, int bus2, uniform_real_distribution<double> distributionProb, default_random_engine generator){
+	int trip1;
+	int trip2;
+
+	for(int i = 1; i < int(solution.sol[bus1].size()); i++){
+		if(distributionProb(generator) > 0.5){
+			trip1 = i;
+			break;
+		} else if(i == int(solution.sol[bus1].size())-1)
+			trip1 = solution.sol[bus1].size()-1;
+	}
+
+	for(int i = 1; i < int(solution.sol[bus2].size()); i++){
+		if(distributionProb(generator) > 0.5){
+			trip2 = i;
+			break;
+		} else if(i == int(solution.sol[bus2].size())-1)
+			trip2 = int(solution.sol[bus2].size())-1;
+	}
+
+	pair<int,int> aux = solution.sol[bus1][trip1];
+
+	solution.sol[bus1][trip1] = solution.sol[bus2][trip2];
+    if(trip1 == 1){
+        solution.sol[bus1][0].second = solution.sol[bus1][trip1].first;
+    }
+
+	solution.sol[bus2][trip2] = aux;
+    if(trip2 == 1){
+        solution.sol[bus2][0].second = solution.sol[bus2][trip2].first;
+    }
+
+	// Actualizar costos
+	solution.busDist[bus1] = routeDist(solution.sol[bus1], instance);
+	solution.busDist[bus2] = routeDist(solution.sol[bus2], instance);
+
+	// Ordenar buses
+	// bus1
+	for(int b = instance.B-2; b >= 0; b--){
+            if(solution.busDist[solution.busByTrips[instance.B-1]] > solution.busDist[solution.busByTrips[b]]){
+                solution.busByTrips.insert(solution.busByTrips.begin()+b+1, solution.busByTrips[instance.B-1]);
+                solution.busByTrips.erase(solution.busByTrips.begin()+instance.B);
+                break;
+            } else if(solution.busDist[solution.busByTrips[instance.B-1]] == solution.busDist[solution.busByTrips[b]]){
+                if(solution.sol[bus1].size() > solution.sol[solution.busByTrips[b]].size()) 
+                    solution.busByTrips.insert(solution.busByTrips.begin()+b+1, solution.busByTrips[instance.B-1]);
+                else
+                    solution.busByTrips.insert(solution.busByTrips.begin()+b, solution.busByTrips[instance.B-1]);
+                solution.busByTrips.erase(solution.busByTrips.begin()+instance.B);
+                break;
+            }
+        }
+	
+	// bus2
+	int posBus2;
+	for(int i = 0; i < instance.B; i++){
+		if(solution.busByTrips[i] == bus2){
+			posBus2 = i;
+			break;
+		}
+	}
+
+	for(int b = instance.B-1; b >= 0; b--){
+        if(b == posBus2)
+			continue;
+
+        if(solution.busDist[solution.busByTrips[posBus2]] > solution.busDist[solution.busByTrips[b]]){
+            solution.busByTrips.insert(solution.busByTrips.begin()+b+1, solution.busByTrips[posBus2]);
+            if(b < posBus2)
+                solution.busByTrips.erase(solution.busByTrips.begin()+posBus2+1);
+            else
+                solution.busByTrips.erase(solution.busByTrips.begin()+posBus2);
+            break;
+        } else if(solution.busDist[solution.busByTrips[posBus2]] == solution.busDist[solution.busByTrips[b]]){
+            if(solution.sol[bus2].size() > solution.sol[solution.busByTrips[b]].size()) 
+                solution.busByTrips.insert(solution.busByTrips.begin()+b+1, solution.busByTrips[posBus2]);
+            else
+                solution.busByTrips.insert(solution.busByTrips.begin()+b, solution.busByTrips[posBus2]);
+
+            if(b < posBus2)
+                solution.busByTrips.erase(solution.busByTrips.begin()+posBus2+1);
+            else
+                solution.busByTrips.erase(solution.busByTrips.begin()+posBus2);
+            break;
+        }
+    }
+
+	return solution;
+}
+
+Solution simulatedAnnealing(Instance instance, Solution solution, int q, int tmax, int qt, int qm) {
+	Solution nextSolution = solution;
+	Solution bestSolution = solution;
+	int bus1, bus2;
+	int evacT, evacTNext;
+    
+    // Setear números random
+    default_random_engine generator;
+    generator.seed(1);
+    uniform_int_distribution<int> distribution(0,instance.B-2);
+    uniform_real_distribution<double> distributionProb(0, 1);
+    
+	for(int t = 1; t < tmax+1;){
+		bus1 = nextSolution.busByTrips[instance.B-1];
+		bus2 = nextSolution.busByTrips[distribution(generator)];
+		nextSolution = randomSwap(nextSolution, instance, bus1, bus2, distributionProb, generator);
+		
+        evacT = solution.busDist[solution.busByTrips[instance.B-1]];
+		evacTNext = nextSolution.busDist[nextSolution.busByTrips[instance.B-1]];
+		
+        if(evacT > evacTNext){
+			solution = nextSolution;
+            t++;
+			if(bestSolution.busDist[bestSolution.busByTrips[instance.B-1]] > evacTNext)
+				bestSolution = nextSolution;
+		} else if(exp((evacT-evacTNext)/q) > distributionProb(generator)){
+            solution = nextSolution;
+            t++;
+        }
+        else
+            nextSolution = solution;
+		
+		if(t%qt == 0)
+            q = q-qm <= 1 ? 1 : q-qm;
+	}
+	return bestSolution;
 }

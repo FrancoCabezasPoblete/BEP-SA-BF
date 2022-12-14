@@ -3,6 +3,10 @@
 
 #include <iostream>
 #include <vector>
+#include <cstdlib>
+#include <random>
+#include <chrono>
+#include <cmath>
 using namespace std;
 
 struct Instance{
@@ -32,8 +36,11 @@ struct Solution{
     vector<int> busDist;
 };
 
+void printSolution(Instance instance, Solution solution, int executionTime);
 Instance initInstance(string file);
 int routeDist(vector<pair<int,int>> currBus, Instance instance);
-Solution initFeasibleSolution(Instance instance);
+pair<Solution,Instance> initFeasibleSolution(Instance instance);
+Solution randomSwap(Solution solution, Instance instance, int bus1, int bus2, uniform_real_distribution<double> distributionProb, default_random_engine generator);
+Solution simulatedAnnealing(Instance instance, Solution, int q, int tmax, int qt, int qm);
 
 #endif
